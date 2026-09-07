@@ -1,0 +1,67 @@
+name: Repository Guard
+
+# This workflow provides a conservative repository-level safety gate.
+# It does not delete files, alter application data, or execute network scans.
+# Language-specific checks are intentionally lightweight so the workflow remains
+# safe for mixed-purpose repositories and does not invent a build contract.
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      # Parse Python sources without installing or executing application code.
+      - name: Validate Python syntax
+        shell: bash
+        run: |
+          if find . -type f -name '*.py' -not -path './.git/*' | grep -q .; then
+            python3 -m compileall -q .
+          else
+            echo "No Python source files found."
+          fi
+
+      # Parse JavaScript files without executing their application behavior.
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: |
+          found=0
+          while IFS= read -r -d '' file; do
+            found=1
+            node --check "$file"
+          done < <(find . -type f -name '*.js' -not -path './.git/*' -not -path '*/node_modules/*' -print0)
+          if [ "$found" -eq 0 ]; then
+            echo "No JavaScript source files found."
+          fi
+
+      # Validate Rust code when a Cargo manifest exists. This uses the project's
+      # own workspace declaration and does not modify tracked source files.
+      - name: Validate Rust workspace
+        shell: bash
+        run: |
+          if [ -f Cargo.toml ]; then
+            cargo check --workspace --all-targets
+          else
+            echo "No Cargo workspace found."
+          fi
+
+      # Validate shell scripts with bash's parser only; scripts are not executed.
+      - name: Validate shell syntax
+        shell: bash
+        run: |
+          found=0
+          while IFS= read -r -d '' file; do
+            found=1
+            bash -n "$file"
+          done < <(find . -type f \( -name '*.sh' -o -name '*.bash' \) -not -path './.git/*' -print0)
+          if [ "$found" -eq 0 ]; then
+            echo "No shell scripts found."
+          fi
