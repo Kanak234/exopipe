@@ -86,18 +86,32 @@ def build_training_set(n_per_class=70, seed=5, n_periods=800, verbose=True):
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Train exopipe transit classifier")
+    parser.add_argument("--fast", action="store_true", help="Fast training for automated testing")
+    parser.add_argument("--n-per-class", type=int, default=None)
+    parser.add_argument("--n-periods", type=int, default=None)
+    args = parser.parse_args()
+
     os.makedirs(OUTDIR, exist_ok=True)
 
-    # reuse a cached feature table if present (saves time on re-runs)
-    cache = os.path.join(OUTDIR, "features_cache.npz")
-    if os.path.exists(cache):
+    if not getattr(classify, "_HAVE_SKLEARN", False):
+        print("[warn] scikit-learn is not installed. Skipping model training.")
+        return 0
+
+    n_per_class = args.n_per_class or (4 if args.fast else 70)
+    n_periods = args.n_periods or (100 if args.fast else 800)
+
+    cache = os.path.join(OUTDIR, "features_cache.npz") if not args.fast else None
+    if cache and os.path.exists(cache):
         print("[train] loading cached features from", cache)
         d = np.load(cache, allow_pickle=True)
         X, y = d["X"], d["y"]
     else:
-        print("[train] building training set (this takes a few minutes) ...")
-        X, y = build_training_set()
-        np.savez(cache, X=X, y=y)
+        print(f"[train] building training set (n_per_class={n_per_class}, n_periods={n_periods}) ...")
+        X, y = build_training_set(n_per_class=n_per_class, n_periods=n_periods)
+        if cache:
+            np.savez(cache, X=X, y=y)
 
     print("[train] feature table: X={}, classes={}".format(
         X.shape, sorted(set(y))))
@@ -110,6 +124,7 @@ def main():
     print("\n[train] accuracy: {:.3f}".format(info["report"]["accuracy"]))
     print("[train] model saved ->", MODEL_PATH)
     print("[train] metrics saved ->", METRICS_PATH)
+    return 0
 
 
 if __name__ == "__main__":

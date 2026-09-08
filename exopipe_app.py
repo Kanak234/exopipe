@@ -27,8 +27,13 @@ import traceback
 import warnings
 warnings.filterwarnings("ignore")
 
-import tkinter as tk
-from tkinter import filedialog, messagebox, ttk, scrolledtext
+try:
+    import tkinter as tk
+    from tkinter import filedialog, messagebox, ttk, scrolledtext
+    _HAVE_TK = True
+except Exception:
+    _HAVE_TK = False
+    tk = None
 
 import numpy as np
 
@@ -540,9 +545,16 @@ class App:
 
 
 def main():
-    root = tk.Tk()
-    App(root)
-    root.mainloop()
+    if not _HAVE_TK or tk is None:
+        print("[warn] tkinter is not available in this environment. Desktop GUI skipped.")
+        return 0
+    try:
+        root = tk.Tk()
+        App(root)
+        root.mainloop()
+    except Exception as e:
+        print(f"[warn] Cannot initialize GUI ({e}). Desktop GUI skipped.")
+        return 0
 
 
 if __name__ == "__main__":

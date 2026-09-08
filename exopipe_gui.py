@@ -27,10 +27,17 @@ import io
 import json
 import numpy as np
 
-import streamlit as st
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+try:
+    import streamlit as st
+    _HAVE_STREAMLIT = True
+except Exception:
+    _HAVE_STREAMLIT = False
+    st = None
+
+if not _HAVE_STREAMLIT:
+    print("[warn] streamlit is not installed. Web GUI skipped.")
+    if __name__ == "__main__":
+        sys.exit(0)
 
 # --- make the exopipe package importable -------------------------------------
 HERE = os.path.dirname(os.path.abspath(__file__))

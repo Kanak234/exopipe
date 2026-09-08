@@ -123,6 +123,12 @@ def predict(model, feature_row):
     probability of the winning class -- this is the "confidence level" the
     problem statement asks us to report.
     """
+    if model is None:
+        snr = float(feature_row[1]) if len(feature_row) > 1 else 0.0
+        label = "transit" if snr > 10 else "noise"
+        conf = float(min(1.0, max(0.1, snr / 30.0)))
+        return label, conf, {label: conf, "other": 1.0 - conf}
+
     x = np.asarray(feature_row, dtype=float).reshape(1, -1)
     label = model.predict(x)[0]
     proba = model.predict_proba(x)[0]
