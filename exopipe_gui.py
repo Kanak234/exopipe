@@ -28,6 +28,11 @@ import json
 import numpy as np
 
 try:
+    import matplotlib.pyplot as plt
+except Exception:
+    plt = None
+
+try:
     import streamlit as st
     _HAVE_STREAMLIT = True
 except Exception:
