@@ -153,3 +153,7 @@ exopipe/
   some overlap remains and is reported honestly.
 - Every stage is wrapped so a single bad target never crashes a batch —
   failures are recorded and the run continues.
+
+## Transit recovery benchmark
+
+Compare raw, flattened and median-filtered TESS photometry on the same injected transits. The benchmark module includes an offline FITS example, tests and measured trial-level results. [Module guide](exopipe/bench/README.md)
