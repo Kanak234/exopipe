@@ -1,4 +1,7 @@
 # exopipe — AI-Enabled Detection of Exoplanets from Noisy Light Curves
+![KP](assets/logo-mark.svg)
+
+Built by Kanak Prabhakar
 
 A data-analysis pipeline that finds transiting-planet signals in noisy TESS
 light curves, classifies each periodic dip (transit / eclipse / blend / noise),
@@ -156,4 +159,21 @@ exopipe/
 
 ## Transit recovery benchmark
 
-Compare raw, flattened and median-filtered TESS photometry on the same injected transits. The benchmark module includes an offline FITS example, tests and measured trial-level results. [Module guide](exopipe/bench/README.md)
+Does detrending help or hurt when you look for a shallow transit? The bench injects known box-shaped dips into one real cached TESS light curve and runs the same BLS search three ways: raw, Lightkurve `flatten()` (Savitzky–Golay), and a segment-wise median filter.
+
+![Demo: transit recovery per method and depth](assets/demo.gif)
+
+```sh
+python -m pip install -r exopipe/bench/requirements.txt
+python -m exopipe.bench.bench data/bench/tic261136679-sector01.fits recovery.csv
+```
+
+| Injected depth | Raw | Flattened | Robust median |
+|---:|---:|---:|---:|
+| 50 ppm | 0/3 | 0/3 | 0/3 |
+| 100 ppm | 0/3 | 0/3 | 1/3 |
+| **200 ppm** | **3/3** | **0/3** | **3/3** |
+| 500 ppm – 1% | 3/3 each | 3/3 each | 3/3 each |
+| **Total (21 trials)** | **15** | **12** | **16** |
+
+Main finding: on this quiet star, the default `flatten()` loses every 200 ppm transit that the raw curve still finds. The full guide is in [docs/bench/README.md](docs/bench/README.md).

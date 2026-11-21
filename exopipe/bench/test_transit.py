@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from .bench import inject, trials
+from .bench import DEPTHS, inject, trials
 
 
 def test_wrap():
@@ -17,7 +17,7 @@ def test_short():
 def test_strong_signal():
     t = np.linspace(0, 20, 1001)
     rows = list(trials(t, np.ones_like(t)))
-    assert len(rows) == 36
+    assert len(rows) == 3 * len(DEPTHS) * 3  # periods x depths x methods
     assert all(
         r["recovered"] for r in rows if r["method"] == "raw" and r["depth"] == 0.01
     )

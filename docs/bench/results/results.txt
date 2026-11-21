@@ -1,0 +1,10 @@
+raw 15 / 21
+flattened 12 / 21
+robust 16 / 21
+depth     50 ppm  raw 0/3  flattened 0/3  robust 0/3
+depth    100 ppm  raw 0/3  flattened 0/3  robust 1/3
+depth    200 ppm  raw 3/3  flattened 0/3  robust 3/3
+depth    500 ppm  raw 3/3  flattened 3/3  robust 3/3
+depth   1000 ppm  raw 3/3  flattened 3/3  robust 3/3
+depth   3000 ppm  raw 3/3  flattened 3/3  robust 3/3
+depth  10000 ppm  raw 3/3  flattened 3/3  robust 3/3

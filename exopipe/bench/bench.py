@@ -11,6 +11,13 @@ from astropy.timeseries import BoxLeastSquares
 from scipy.ndimage import median_filter
 
 
+# Injected transit depths (fraction of flux). 0 is the null control.
+# The old grid stopped at 0.1 %, which every method found 9/9 on this quiet
+# star, so it could not tell the methods apart. 50-500 ppm is where
+# preprocessing choices start to matter (Earth-to-Neptune sizes on a Sun-like star).
+DEPTHS = (0, 0.00005, 0.0001, 0.0002, 0.0005, 0.001, 0.003, 0.01)
+
+
 def inject(time, flux, period, depth, epoch, duration=0.12):
     # Center the phase before applying the transit box so it wraps correctly at epoch.
     phase = (time - epoch + period / 2) % period - period / 2
@@ -34,7 +41,7 @@ def trials(time, flux, seed=42):
     # Use the same realization for every method so a change in phase cannot favor one.
     for period in (2.17, 3.43, 4.37):
         epoch = t[0] + rng.uniform(0, period)
-        for depth in (0, 0.001, 0.003, 0.01):
+        for depth in DEPTHS:
             injected = inject(t, f, period, depth, epoch)
             for method in ("raw", "flattened", "robust"):
                 start = perf_counter()
@@ -82,9 +89,16 @@ def main():
         writer = csv.DictWriter(stream, fieldnames=["sha256", *rows[0]])
         writer.writeheader()
         writer.writerows(dict(sha256=checksum, **r) for r in rows)
+    # Per-method totals, then a per-depth table so the ceiling (or lack of it) is visible.
     for method in ("raw", "flattened", "robust"):
         selected = [r for r in rows if r["method"] == method and r["depth"]]
         print(method, sum(r["recovered"] for r in selected), "/", len(selected))
+    for depth in DEPTHS[1:]:
+        counts = [
+            sum(r["recovered"] for r in rows if r["method"] == m and r["depth"] == depth)
+            for m in ("raw", "flattened", "robust")
+        ]
+        print(f"depth {depth * 1e6:>6.0f} ppm  raw {counts[0]}/3  flattened {counts[1]}/3  robust {counts[2]}/3")
 
 
 if __name__ == "__main__":
